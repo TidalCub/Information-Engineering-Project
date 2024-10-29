@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/location.dart';
 import 'package:geolocator/geolocator.dart';
+import '../services/stations.dart';
 
 class LiveLocationWidget extends StatefulWidget {
   @override
@@ -14,7 +15,7 @@ class _LiveLocationWidgetState extends State<LiveLocationWidget> {
   @override
   void initState() {
     super.initState();
-    _positionStream = _geoService.getPositionStream();  // Initialize the location stream
+    _positionStream = _geoService.getPositionStream();
   }
 
   @override
@@ -29,9 +30,23 @@ class _LiveLocationWidgetState extends State<LiveLocationWidget> {
             return Text("Error: ${snapshot.error}");
           } else if (snapshot.hasData) {
             final position = snapshot.data!;
-            return Text(
-              "Latitude: ${position.latitude}, Longitude: ${position.longitude}",
-              style: TextStyle(fontSize: 18, color: Colors.blueAccent),
+            StationFinder stationFinder = StationFinder(lat: position.latitude, lon: position.longitude);
+            return FutureBuilder<String>(
+              future: stationFinder.station().then((stations) => stations.toString()),
+              builder: (context, stationSnapshot) {
+                if (stationSnapshot.connectionState == ConnectionState.waiting) {
+                  return Text("Fetching station data...");
+                } else if (stationSnapshot.hasError) {
+                  return Text("Error: ${stationSnapshot.error}");
+                } else if (stationSnapshot.hasData) {
+                  return Text(
+                    "Latitude: ${position.latitude}, Longitude: ${position.longitude}\nStation Data: ${stationSnapshot.data}",
+                    style: TextStyle(fontSize: 18, color: Colors.blueAccent),
+                  );
+                } else {
+                  return Text("No station data available");
+                }
+              },
             );
           } else {
             return Text("No location data available");
@@ -41,3 +56,4 @@ class _LiveLocationWidgetState extends State<LiveLocationWidget> {
     );
   }
 }
+
