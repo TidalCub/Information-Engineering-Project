@@ -36,10 +36,10 @@ class StationFinder {
       if (response.statusCode == 200) {
         return parseStation(response.body);
       } else {
-        throw Exception('Failed to load station data');
+        throw Exception('Failed to load station data ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Failed to load station data');
+      throw Exception('Failed to load station data, $e');
     }
   }
 

@@ -20,40 +20,62 @@ class _LiveLocationWidgetState extends State<LiveLocationWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: StreamBuilder<Position>(
-        stream: _positionStream,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Text("Waiting for location updates...");
-          } else if (snapshot.hasError) {
-            return Text("Error: ${snapshot.error}");
-          } else if (snapshot.hasData) {
-            final position = snapshot.data!;
-            StationFinder stationFinder = StationFinder(lat: position.latitude, lon: position.longitude);
-            return FutureBuilder<String>(
-              future: stationFinder.station().then((stations) => stations.toString()),
-              builder: (context, stationSnapshot) {
-                if (stationSnapshot.connectionState == ConnectionState.waiting) {
-                  return Text("Fetching station data...");
-                } else if (stationSnapshot.hasError) {
-                  return Text("Error: ${stationSnapshot.error}");
-                } else if (stationSnapshot.hasData) {
-                  return Text(
-                    "Latitude: ${position.latitude}, Longitude: ${position.longitude}\nStation Data: ${stationSnapshot.data}",
-                    style: TextStyle(fontSize: 18, color: Colors.blueAccent),
-                  );
-                } else {
-                  return Text("No station data available");
-                }
-              },
+    return Padding(
+      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 20),
+      child: _buildLocationStreamBuilder(),
+    );
+  }
+
+  Widget _buildLocationStreamBuilder() {
+    return StreamBuilder<Position>(
+      stream: _positionStream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Text("Waiting for location updates...");
+        } else if (snapshot.hasError) {
+          return Text("Error: ${snapshot.error}");
+        } else if (snapshot.hasData) {
+          final position = snapshot.data!;
+          return _StationFuture(position);
+        } else {
+          return Text("No location data available");
+        }
+      },
+    );
+  }
+
+  Widget _StationFuture(Position position) {
+    StationFinder stationFinder = StationFinder(lat: position.latitude, lon: position.longitude);
+    print("${position.latitude}, ${position.longitude}");
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: stationFinder.station(),
+      builder: (context, stationSnapshot) {
+        if (stationSnapshot.connectionState == ConnectionState.waiting) {
+          return Text("Fetching station data...");
+        } else if (stationSnapshot.hasError) {
+          return Text("Error: ${stationSnapshot.error}");
+        } else if (stationSnapshot.hasData) {
+          final stations = stationSnapshot.data!;
+          return _StationDataWidget(position, stations);
+        } else {
+          return Text("No station data available");
+        }
+      },
+    );
+  }
+
+  Widget _StationDataWidget(Position position, List<Map<String, dynamic>> stations) {
+    return Center (
+      child: 
+        Column(
+          children: stations.map((station) {
+            return Text(
+              "${station['name']}",
+              style: TextStyle(fontSize: 25, color: Colors.black,),
+              
             );
-          } else {
-            return Text("No location data available");
-          }
-        },
-      ),
+          }).toList(),
+        )
     );
   }
 }
-
