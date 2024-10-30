@@ -18,7 +18,10 @@ class StationFinder {
   List<Map<String, dynamic>> parseStation(String responseBody) {
     final data = jsonDecode(responseBody);
     List<Map<String, dynamic>> stations = [];
-    for (var item in data['stopPoints']) {
+    if (data['stopPoints'].isEmpty) {
+      stations.add({'name': 'No stations found'});
+    } else {
+      for (var item in data['stopPoints']) {
       if (!item['modes'].contains('tube')) continue;
       stations.add({
         'name': item['commonName'],
@@ -27,6 +30,8 @@ class StationFinder {
         'modes': item['modes'],
       });
     }
+    }
+    print(stations);
     return stations;
   }
 
