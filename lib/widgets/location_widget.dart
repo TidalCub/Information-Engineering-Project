@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:tfl_app/model/station_response.dart';
 import '../services/location.dart';
 import 'package:geolocator/geolocator.dart';
 import '../services/stations.dart';
-
+import '../model/station_response.dart';
 class LiveLocationWidget extends StatefulWidget {
   @override
   _LiveLocationWidgetState createState() => _LiveLocationWidgetState();
@@ -36,7 +37,7 @@ class _LiveLocationWidgetState extends State<LiveLocationWidget> {
           return Text("Error: ${snapshot.error}");
         } else if (snapshot.hasData) {
           final position = snapshot.data!;
-          return _StationFuture(position);
+          return _stationFuture(position);
         } else {
           return Text("No location data available");
         }
@@ -44,38 +45,45 @@ class _LiveLocationWidgetState extends State<LiveLocationWidget> {
     );
   }
 
-  Widget _StationFuture(Position position) {
-    StationFinder stationFinder = StationFinder(lat: position.latitude, lon: position.longitude);
-    print("${position.latitude}, ${position.longitude}");
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: stationFinder.station(),
-      builder: (context, stationSnapshot) {
-        if (stationSnapshot.connectionState == ConnectionState.waiting) {
-          return Text("Fetching station data...");
-        } else if (stationSnapshot.hasError) {
-          return Text("Error: ${stationSnapshot.error}");
-        } else if (stationSnapshot.hasData) {
-          final stations = stationSnapshot.data!;
-          return _StationDataWidget(position, stations);
+  Widget _stationFuture(Position position) {
+    return FutureBuilder<StationResponse>(
+      future: StationFinder(lat: position.latitude, lon: position.longitude).fetchStation(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          return Text("Error: ${snapshot.error}");
+        } else if (snapshot.hasData) {
+          final stationResponse = snapshot.data!;
+          return Column(
+          children: [
+            Text("Station: ${stationResponse.station.name}"),
+            ...stationResponse.arrivalsByDirection.entries.map((lineEntry) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Line: ${lineEntry.key}", style: TextStyle(fontWeight: FontWeight.bold)),
+                  ...lineEntry.value.entries.map((directionEntry) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Direction: ${directionEntry.key}"),
+                        ...directionEntry.value.map((arrival) => ListTile(
+                          title: Text(arrival.destinationName),
+                          subtitle: Text("Platform: ${arrival.platform}, ETA: ${arrival.timeToStation} seconds"),
+                        ))
+                      ],
+                    );
+                  }).toList(),
+                ],
+              );
+            }).toList(),
+          ],
+        );
         } else {
-          return Text("No station data available");
+          return Text("No stations found");
         }
       },
-    );
-  }
-
-  Widget _StationDataWidget(Position position, List<Map<String, dynamic>> stations) {
-    return Center (
-      child: 
-        Column(
-          children: stations.map((station) {
-            return Text(
-              "${station['name']}",
-              style: TextStyle(fontSize: 25, color: Colors.black,),
-              
-            );
-          }).toList(),
-        )
     );
   }
 }
