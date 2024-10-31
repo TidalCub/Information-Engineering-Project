@@ -17,11 +17,11 @@ class Arrival {
 
   factory Arrival.fromJson(Map<String, dynamic> json) {
     return Arrival(
-      destinationName: json['destination_name'],
-      destinationNaptanId: json['destination_naptan_id'],
-      direction: json['direction'],
-      platform: json['platform'],
-      timeToStation: json['time_to_station'],
+      destinationName: json['destination_name'] ?? 'Not Given',
+      destinationNaptanId: json['destination_naptan_id'] ?? 'Not Given',
+      direction: json['direction'] ?? 'Not Given',
+      platform: json['platform'] ?? 'Not Given',
+      timeToStation: json['time_to_station'] ?? 'Not Given',
       expectedArrival: DateTime.parse(json['expected_arrival']),
     );
   }

@@ -3,7 +3,7 @@ import 'package:tfl_app/model/station_response.dart';
 import '../services/location.dart';
 import 'package:geolocator/geolocator.dart';
 import '../services/stations.dart';
-import '../model/station_response.dart';
+import '../views/styling/colours.dart';
 class LiveLocationWidget extends StatefulWidget {
   @override
   _LiveLocationWidgetState createState() => _LiveLocationWidgetState();
@@ -57,25 +57,78 @@ class _LiveLocationWidgetState extends State<LiveLocationWidget> {
           final stationResponse = snapshot.data!;
           return Column(
           children: [
-            Text("Station: ${stationResponse.station.name}"),
+            Text(
+              stationResponse.station.name,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30)
+              ),
             ...stationResponse.arrivalsByDirection.entries.map((lineEntry) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Line: ${lineEntry.key}", style: TextStyle(fontWeight: FontWeight.bold)),
-                  ...lineEntry.value.entries.map((directionEntry) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Direction: ${directionEntry.key}"),
-                        ...directionEntry.value.map((arrival) => ListTile(
-                          title: Text(arrival.destinationName),
-                          subtitle: Text("Platform: ${arrival.platform}, ETA: ${arrival.timeToStation} seconds"),
-                        ))
-                      ],
-                    );
-                  }).toList(),
+              final borderColor = lineColors[lineEntry.key];
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: 
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                  Container(
+                  decoration: BoxDecoration(
+                    border: Border(
+                    left: BorderSide(
+                      color: borderColor ?? Color(Colors.black as int),
+                      width: 4.0,
+                    ),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                      lineEntry.key, //Tube Line text
+                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)
+                      ),
+                      ...lineEntry.value.entries.map((directionEntry) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                            color: Colors.grey,
+                            borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                            directionEntry.key,
+                            style: TextStyle(color: Colors.white, fontSize: 12),
+                            ),
+                          ),
+                          ...directionEntry.value.map((arrival) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(arrival.destinationName, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: Text("${arrival.timeToStation}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                ),
+                                Text("Plat. ${arrival.platform}")
+                              ],
+                              )
+                            ])
+                          ))
+                          ],
+                        );
+                      }),
+                    ],
+                    ),
+                  ),
+                  ),
                 ],
+                ),
               );
             }).toList(),
           ],
