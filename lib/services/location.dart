@@ -32,7 +32,7 @@ class GeolocationService {
     yield* Geolocator.getPositionStream(
       locationSettings: LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 10, // Adjust the distance filter to get updates when moving by 10 meters
+        distanceFilter: 30, // Adjust the distance filter to get updates when moving by 30 meters
       ),
     );
   }
