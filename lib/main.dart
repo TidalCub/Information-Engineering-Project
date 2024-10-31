@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'widgets/location_widget.dart';
+import 'views/station_arrivals.dart';
 
 void main() {
   runApp(const MainApp());
